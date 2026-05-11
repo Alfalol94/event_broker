@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Broker - Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="chat-wrapper">
+        <div class="chat-sidebar">
+            <div class="sidebar-header">
+                <div class="avatar">{{ usuario[0].upper() }}</div>
+                <div>
+                    <p class="username">{{ usuario }}</p>
+                    <p class="status">conectado</p>
+                </div>
+                <a href="/logout" class="logout-btn">Salir</a>
+            </div>
+            <div class="search-box">
+                <input type="text" id="destinatario-input" placeholder="Buscar usuario...">
+                <button onclick="iniciarChat()">Chatear</button>
+            </div>
+        </div>
+
+        <div class="chat-main">
+            <div class="chat-header" id="chat-header">
+                <p>Selecciona un usuario para chatear</p>
+            </div>
+
+            <div class="messages-box" id="messages-box">
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="mensaje-input" placeholder="Escribe un mensaje..." onkeypress="enterEnviar(event)">
+                <button onclick="enviarMensaje()">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const usuarioActual = "{{ usuario }}";
+        let destinatarioActual = null;
+        let intervalo = null;
+
+        function iniciarChat() {
+            const dest = document.getElementById("destinatario-input").value.trim();
+            if (!dest || dest === usuarioActual) return;
+            destinatarioActual = dest;
+            document.getElementById("chat-header").innerHTML = `<p>Chateando con <strong>${dest}</strong></p>`;
+            document.getElementById("messages-box").innerHTML = "";
+            if (intervalo) clearInterval(intervalo);
+            cargarMensajes();
+            intervalo = setInterval(cargarMensajes, 2000);
+        }
+
+        function cargarMensajes() {
+            if (!destinatarioActual) return;
+            fetch(`/messages/${destinatarioActual}`)
+                .then(r => r.json())
+                .then(mensajes => {
+                    const box = document.getElementById("messages-box");
+                    box.innerHTML = mensajes.map(m => `
+                        <div class="message ${m.remitente === usuarioActual ? 'propio' : 'ajeno'}">
+                            <div class="bubble">${m.contenido}</div>
+                            <div class="meta">${m.remitente} · L:${m.lamport}</div>
+                        </div>
+                    `).join("");
+                    box.scrollTop = box.scrollHeight;
+                });
+        }
+
+        function enviarMensaje() {
+            const contenido = document.getElementById("mensaje-input").value.trim();
+            if (!contenido || !destinatarioActual) return;
+            fetch("/send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ destinatario: destinatarioActual, contenido: contenido })
+            }).then(() => {
+                document.getElementById("mensaje-input").value = "";
+                cargarMensajes();
+            });
+        }
+
+        function enterEnviar(event) {
+            if (event.key === "Enter") enviarMensaje();
+        }
+    </script>
+</body>
+</html>

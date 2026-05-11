@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Broker - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <h1>Event Broker</h1>
+            <p class="subtitle">{% if registro %}Crea tu cuenta{% else %}Inicia sesión{% endif %}</p>
+
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST">
+                <input type="text" name="username" placeholder="Usuario" required>
+                <input type="password" name="password" placeholder="Contraseña" required>
+                <button type="submit">{% if registro %}Registrarse{% else %}Entrar{% endif %}</button>
+            </form>
+
+            <div class="switch-link">
+                {% if registro %}
+                    ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+                {% else %}
+                    ¿No tienes cuenta? <a href="/register">Regístrate</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
