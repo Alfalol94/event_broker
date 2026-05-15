@@ -72,6 +72,7 @@ def chat():
     return render_template("chat.html", usuario=session["usuario"])
 
 @app.route("/send", methods=["POST"])
+@app.route("/send", methods=["POST"])
 def send():
     if "usuario" not in session:
         return jsonify({"error": "no autenticado"}), 401
@@ -80,7 +81,22 @@ def send():
     contenido = data["contenido"]
     remitente = session["usuario"]
     canal = "-".join(sorted([remitente, destinatario]))
-    mensaje = {"remitente": remitente, "contenido": contenido}
+
+    with broker.lock:
+        broker.lamport_clock += 1
+        lamport = broker.lamport_clock
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "INSERT INTO mensajes (remitente, destinatario, contenido, lamport_clock) VALUES (%s, %s, %s, %s)",
+        (remitente, destinatario, contenido, lamport)
+    )
+    db.commit()
+    db.close()
+
+    return jsonify({"ok": True, "lamport": lamport})
+
     def guardar(msg):
         db = get_db()
         cursor = db.cursor()
