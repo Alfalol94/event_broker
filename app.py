@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import pymysql
 import hashlib
@@ -11,10 +12,11 @@ mensajes_en_memoria = {}
 
 def get_db():
     return pymysql.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="event_broker_db",
+        host=os.environ.get("MYSQLHOST"),
+        user=os.environ.get("MYSQLUSER"),
+        password=os.environ.get("MYSQLPASSWORD"),
+        database=os.environ.get("MYSQLDATABASE"),
+        port=int(os.environ.get("MYSQLPORT", 3306)),
         charset="utf8mb4"
     )
 
