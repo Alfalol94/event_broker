@@ -101,11 +101,10 @@ def messages(destinatario):
     if "usuario" not in session:
         return jsonify({"error": "no autenticado"}), 401
     remitente = session["usuario"]
-    canal = "-".join(sorted([remitente, destinatario]))
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "SELECT remitente, contenido, lamport_clock FROM mensajes WHERE (remitente=%s AND destinatario=%s) OR (remitente=%s AND destinatario=%s) ORDER BY lamport_clock ASC",
+        "SELECT remitente, contenido, lamport_clock FROM mensajes WHERE (remitente=%s AND destinatario=%s) OR (remitente=%s AND destinatario=%s) ORDER BY created_at ASC",
         (remitente, destinatario, destinatario, remitente)
     )
     filas = cursor.fetchall()
